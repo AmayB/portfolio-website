@@ -31,7 +31,7 @@ if (container) {
     cardCanvas.height = 800;
     const cardContext = cardCanvas.getContext('2d');
     const abImage = new Image();
-    abImage.src = 'assets/ab-card.png';
+    abImage.src = '/assets/ab-card.png';
     cardContext.fillStyle = '#f6f6f6';
     cardContext.fillRect(0, 0, cardCanvas.width, cardCanvas.height);
     abImage.onload = () => {
