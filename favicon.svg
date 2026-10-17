@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#000"/>
+  <g fill="#fff" font-family="Arial, sans-serif" font-size="42" font-weight="700" text-anchor="middle">
+    <text x="32" y="46">
+      A
+      <animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;.4;.5;1"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" dur="3s" repeatCount="indefinite" values="1 1;1 1;.05 1;0 1;0 1" keyTimes="0;.4;.48;.5;1"/>
+    </text>
+    <text x="32" y="46" opacity="0">
+      B
+      <animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;.5;.6;.9;1"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" dur="3s" repeatCount="indefinite" values="0 1;0 1;.05 1;1 1;1 1" keyTimes="0;.5;.52;.6;1"/>
+    </text>
+  </g>
+</svg>

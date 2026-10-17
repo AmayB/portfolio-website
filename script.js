@@ -3,64 +3,78 @@ const name3d = document.getElementById('name3d');
 const heading = name3d.querySelector('h1');
 const constrain = 50;
 const mainNameText = heading.textContent;
-const projects = document.getElementById('projects');
-const about = document.getElementById('about');
-const routeLinks = document.querySelectorAll('a[href="/home"], a[href="/projects"], a[href="/about"]');
+const routeLinks = document.querySelectorAll('a[href="#app"], a[href="#projects"], a[href="#about"]');
 const headerName = document.getElementById('header-name');
-const headerNameText = headerName.textContent;
+const scrollbar = document.querySelector('.custom-scrollbar');
+const scrollbarThumb = document.querySelector('.custom-scrollbar-thumb');
+heading.textContent = mainNameText;
 
-heading.textContent = '';
-name3d.classList.add('is-typing');
-let mainNameIndex = 0;
-let mainNameTyping = true;
+const fadeTargets = document.querySelectorAll('.home-copy, .project-card, .about-inner');
+const fadeObserver = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	? null
+	: new IntersectionObserver((entries, observer) => {
+		entries.forEach((entry) => {
+			if (!entry.isIntersecting) return;
+			entry.target.classList.add('is-visible');
+			observer.unobserve(entry.target);
+		});
+	}, { threshold: 0.16 });
 
-const typeMainName = () => {
-	heading.textContent = mainNameText.slice(0, mainNameIndex);
-	mainNameIndex += 1;
-
-	if (mainNameIndex <= mainNameText.length) {
-		window.setTimeout(typeMainName, 115);
-	} else {
-		name3d.classList.remove('is-typing');
-		mainNameTyping = false;
-	}
-};
-
-typeMainName();
-
-const showPage = (page) => {
-	const projectsPage = page === 'projects';
-	const aboutPage = page === 'about';
-	app.classList.toggle('page-hidden', projectsPage || aboutPage);
-	projects.classList.toggle('page-visible', projectsPage);
-	about.classList.toggle('page-visible', aboutPage);
-	document.body.scrollTop = 0;
-	document.documentElement.scrollTop = 0;
-};
+fadeTargets.forEach((target) => {
+	target.classList.add('fade-in-on-scroll');
+	if (fadeObserver) fadeObserver.observe(target);
+	else target.classList.add('is-visible');
+});
 
 routeLinks.forEach((link) => {
 	link.addEventListener('click', (event) => {
 		event.preventDefault();
-		const page = link.getAttribute('href').slice(1);
-		history.pushState({}, '', `/${page}`);
-		showPage(page);
+		const target = document.querySelector(link.getAttribute('href'));
+
+		if (!target) return;
+
+		target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	});
 });
 
-const getCurrentPage = () => {
-	const page = window.location.pathname.replace(/^\/+|\/+$/g, '');
-	return ['projects', 'about'].includes(page) ? page : 'home';
+const updateScrollbar = () => {
+	if (!scrollbar || !scrollbarThumb) return;
+
+	const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+	const trackHeight = scrollbar.clientHeight;
+	const thumbHeight = Math.max((window.innerHeight / document.documentElement.scrollHeight) * trackHeight, 42);
+	const thumbTravel = trackHeight - thumbHeight;
+
+	scrollbarThumb.style.height = `${thumbHeight}px`;
+	scrollbarThumb.style.transform = `translateY(${scrollRange ? (window.scrollY / scrollRange) * thumbTravel : 0}px)`;
+	scrollbar.hidden = scrollRange <= 0;
 };
 
-window.addEventListener('popstate', () => {
-	showPage(getCurrentPage());
+const scrollFromPointer = (clientY) => {
+	const bounds = scrollbar.getBoundingClientRect();
+	const thumbHeight = scrollbarThumb.offsetHeight;
+	const thumbTravel = bounds.height - thumbHeight;
+	const progress = Math.min(Math.max((clientY - bounds.top - thumbHeight / 2) / thumbTravel, 0), 1);
+	const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+
+	window.scrollTo({ top: progress * scrollRange, behavior: 'auto' });
+};
+
+scrollbar?.addEventListener('pointerdown', (event) => {
+	event.preventDefault();
+	scrollbar.setPointerCapture(event.pointerId);
+	scrollFromPointer(event.clientY);
 });
 
-showPage(getCurrentPage());
+scrollbar?.addEventListener('pointermove', (event) => {
+	if (scrollbar.hasPointerCapture(event.pointerId)) scrollFromPointer(event.clientY);
+});
+
+window.addEventListener('scroll', updateScrollbar, { passive: true });
+window.addEventListener('resize', updateScrollbar);
+updateScrollbar();
 
 const moveHeroText = (event) => {
-	if (mainNameTyping) return;
-
 	const { clientX, clientY } = event;
 	const { x, y, width, height } = name3d.getBoundingClientRect();
 
@@ -74,4 +88,3 @@ const moveHeroText = (event) => {
 	heading.style.transform = `rotateZ(${rotateZ}deg)`;
 };
 
-app.addEventListener('mousemove', moveHeroText);
