@@ -20,26 +20,6 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.fade-in-on-scroll {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 650ms ease, transform 650ms ease;
-}
-
-.fade-in-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fade-in-on-scroll,
-  .fade-in-on-scroll.is-visible {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
-
 .doodle-stage {
   position: fixed;
   inset: 0;
@@ -806,4 +786,65 @@ nav a:hover::after {
 #text3d h1 {
   width: 100%;
   text-align: center;
+}
+/* React Bits lanyard: drawn on a layer over the whole hero (see src/lanyard-mount.jsx) */
+.lanyard-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.lanyard-stage {
+  position: absolute;
+  pointer-events: auto;
+}
+
+#text3d {
+  z-index: 1;
+}
+
+@media (min-width: 901px) {
+  /* Let drags on the card pass through the hero text, but keep links usable */
+  #text3d {
+    pointer-events: none;
+  }
+
+  #text3d a,
+  #text3d .description {
+    pointer-events: auto;
+  }
+}
+
+/* React Bits ScrollFloat headings keep the site's heading styles */
+.scroll-float-host {
+  display: contents;
+}
+
+.scroll-float-host .scroll-float {
+  padding-bottom: 0.12em;
+}
+
+.scroll-float-host .scroll-float-text {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+}
+
+/* Project cards tilt as they scroll toward the screen edges (see src/project-tilt.js) */
+.tilt-card {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* React Bits SplitText hero name (see src/split-name-mount.jsx) */
+.split-name-host {
+  display: contents;
+}
+
+#text3d h1.split-parent {
+  display: block !important;
+  white-space: nowrap !important;
+  pointer-events: auto;
 }
