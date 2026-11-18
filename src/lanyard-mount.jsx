@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import Lanyard from './components/Lanyard/Lanyard';
-import cardImage from '../assets/ab-card.png';
+import cardImage from '../assets/ab-card.jpg';
 
 // Card height on desktop, in pixels, capped to a share of the hero height.
 const CARD_HEIGHT = 460;
@@ -85,7 +85,7 @@ const Stage = () => {
       <Lanyard
         frontImage={cardImage}
         backImage={cardImage}
-        imageFit="contain"
+        imageFit="cover"
         cardColor="#f6f6f6"
         strapColor="#111111"
         anchor={frame.anchor}
