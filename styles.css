@@ -502,12 +502,12 @@ nav a:hover::after {
   transform: none;
 }
 
-.project-details img {
+.project-details img,
+.project-details video {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 16px;
-  filter: grayscale(100%);
 }
 
 .project-details-copy {

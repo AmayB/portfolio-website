@@ -295,7 +295,44 @@ const buildBandGeometry = count => {
   return geometry;
 };
 
-const buildEnvironment = renderer => {
+// PMREMGenerator compiles its blur/GGX shaders synchronously the first time it runs, which
+// froze the page for ~0.5s on load. Pre-compile them (and the panel materials) in the
+// background with compileAsync, against the same kind of render target fromScene draws into,
+// so fromScene finds the programs ready. Uses PMREMGenerator internals, so any mismatch just
+// falls back to the normal (blocking) path.
+const warmUpPmrem = async (renderer, pmrem, geometry, materials) => {
+  if (typeof renderer.compileAsync !== 'function' || typeof pmrem._allocateTargets !== 'function') return;
+  let warmTarget = null;
+  try {
+    pmrem._setSize(256);
+    warmTarget = pmrem._allocateTargets();
+    const warmScene = new THREE.Scene();
+    // Program keys depend on the geometry, so the filters must use PMREM's own plane meshes.
+    const lodGeometry = pmrem._lodMeshes?.[0]?.geometry;
+    if (lodGeometry) {
+      [pmrem._blurMaterial, pmrem._ggxMaterial]
+        .filter(Boolean)
+        .forEach(material => warmScene.add(new THREE.Mesh(lodGeometry, material)));
+    }
+    materials.forEach(material => warmScene.add(new THREE.Mesh(geometry, material)));
+    const camera = new THREE.PerspectiveCamera(90, 1, 0.1, 100);
+    const previous = renderer.getRenderTarget();
+    renderer.setRenderTarget(warmTarget);
+    let pending;
+    try {
+      pending = renderer.compileAsync(warmScene, camera);
+    } finally {
+      renderer.setRenderTarget(previous);
+    }
+    await pending;
+  } catch {
+    // Fall through: fromScene will compile what it needs itself.
+  } finally {
+    warmTarget?.dispose();
+  }
+};
+
+const buildEnvironment = async renderer => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0.035, 0.035, 0.04);
   const geometry = new THREE.PlaneGeometry(1, 1);
@@ -322,6 +359,7 @@ const buildEnvironment = renderer => {
   panel(0.5, [0, -7, 1], [16, 6]);
   panel(0.9, [8, 0, -2], [4, 10]);
   const pmrem = new THREE.PMREMGenerator(renderer);
+  await warmUpPmrem(renderer, pmrem, geometry, materials);
   const target = pmrem.fromScene(scene, 0.035);
   pmrem.dispose();
   geometry.dispose();
@@ -773,12 +811,15 @@ const Lanyard = ({
     const canvas = renderer.domElement;
     canvas.className = 'rb-lanyard-canvas';
     canvas.setAttribute('aria-hidden', 'true');
+    // Hidden until its shaders finish compiling in the background (see compileAsync below),
+    // so the first frame doesn't freeze the page.
+    canvas.style.opacity = '0';
+    let ready = false;
     container.appendChild(canvas);
 
     const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     const scene = new THREE.Scene();
-    const environment = buildEnvironment(renderer);
-    scene.environment = environment.texture;
+    let environment = null;
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 200);
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
     keyLight.position.set(-2.5, 4, 6);
@@ -1096,6 +1137,7 @@ const Lanyard = ({
     };
 
     const render = () => {
+      if (!ready) return;
       cardGroup.position.copy(sim.body.position);
       cardGroup.quaternion.copy(sim.body.quaternion);
       updateBand();
@@ -1268,6 +1310,28 @@ const Lanyard = ({
     applyRef.current = apply;
     resize();
 
+    // Compile every shader off the main thread (KHR_parallel_shader_compile where supported),
+    // then draw the first frame and fade the card in.
+    const reveal = () => {
+      if (!alive || ready) return;
+      ready = true;
+      render();
+      canvas.style.transition = 'opacity 400ms ease';
+      canvas.style.opacity = '1';
+      start();
+    };
+    buildEnvironment(renderer)
+      .then(target => {
+        if (!alive) {
+          target.dispose();
+          return undefined;
+        }
+        environment = target;
+        scene.environment = target.texture;
+        return renderer.compileAsync(scene, camera);
+      })
+      .then(reveal, reveal);
+
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
@@ -1284,7 +1348,7 @@ const Lanyard = ({
       [bodyMesh, frontMesh, backMesh, ring, clampMesh, eyelet, band].forEach(mesh => mesh.geometry?.dispose());
       [frontMaterial, backMaterial, edgeMaterial, metalMaterial, bandMaterial].forEach(material => material.dispose());
       [frontTexture, backTexture, strapTexture, grain, weave].forEach(texture => texture.dispose());
-      environment.dispose();
+      environment?.dispose();
       renderer.dispose();
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     };
