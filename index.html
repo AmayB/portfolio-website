@@ -151,7 +151,30 @@
 
       <div class="project-grid">
 
-
+        <article class="project-card project-card-secondary" tabindex="0">
+          <div class="project-card-top">
+            <span class="project-number">2026</span>
+            <span class="project-status">Completed</span>
+          </div>
+          <h3>AI Basketball Court Mapper</h3>
+          <div class="project-details">
+            <img
+              src="assets/basketballmapper.gif"
+              alt="Broadcast basketball footage mapped onto a live 2D court view with team stats"
+              loading="lazy"
+            />
+            <div class="project-details-copy">
+              <p>A computer vision pipeline that turns a single broadcast basketball clip into tactical analytics, detecting and tracking players, mapping them onto a 2D court, and rendering a dashboard video with possession and space-control stats.</p>
+              <div class="project-tags">
+                <span>Python</span>
+                <span>YOLO</span>
+                <span>ByteTrack</span>
+                <span>Supervision</span>
+              </div>
+              <a href="https://github.com/AmayB/basketball-court-mapper" target="_blank" rel="noreferrer">View project</a>
+            </div>
+          </div>
+        </article>
 
         <article class="project-card project-card-secondary" tabindex="0">
           <div class="project-card-top">
@@ -234,7 +257,10 @@
     </div>
   </section>
 
-  <script type="module" src="lanyard.js"></script>
+  <script type="module" src="src/lanyard-mount.jsx"></script>
+  <script type="module" src="src/scroll-float-mount.jsx"></script>
+  <script type="module" src="src/split-name-mount.jsx"></script>
+  <script type="module" src="src/project-tilt.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

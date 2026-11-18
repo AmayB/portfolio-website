@@ -9,23 +9,6 @@ const scrollbar = document.querySelector('.custom-scrollbar');
 const scrollbarThumb = document.querySelector('.custom-scrollbar-thumb');
 heading.textContent = mainNameText;
 
-const fadeTargets = document.querySelectorAll('.home-copy, .project-card, .about-inner');
-const fadeObserver = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-	? null
-	: new IntersectionObserver((entries, observer) => {
-		entries.forEach((entry) => {
-			if (!entry.isIntersecting) return;
-			entry.target.classList.add('is-visible');
-			observer.unobserve(entry.target);
-		});
-	}, { threshold: 0.16 });
-
-fadeTargets.forEach((target) => {
-	target.classList.add('fade-in-on-scroll');
-	if (fadeObserver) fadeObserver.observe(target);
-	else target.classList.add('is-visible');
-});
-
 routeLinks.forEach((link) => {
 	link.addEventListener('click', (event) => {
 		event.preventDefault();
